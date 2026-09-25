@@ -56,32 +56,8 @@ if show_info
 end
 
 if output_file
-  load_address = sid_file.data[0] + (sid_file.data[1] << 8)
-
-  sid = Sidtool::Sid.new
-  cpu = Mos6510::Cpu.new(sid: sid)
-
-  cpu.load(sid_file.data[2..-1], from: load_address)
-  cpu.start
-
-  play_address = sid_file.play_address
-  if play_address == 0
-    cpu.jsr sid_file.init_address
-    play_address = (cpu.peek(0x0315) << 8) + cpu.peek(0x0314)
-    STDERR.puts "New play address #{play_address}"
-  end
-
-  cpu.jsr sid_file.init_address, song - 1
-
-  frames.times do
-    cpu.jsr play_address
-    sid.finish_frame
-    Sidtool::STATE.current_frame += 1
-  end
-
-  sid.stop!
-
   STDERR.puts("Processed #{frames} frames")
 
-  exporter_class.new(sid.synths_for_voices).write_to(output_file)
+  synths_for_voices = Sidtool::Converter.new(sid_file, song: song, frames: frames).convert
+  exporter_class.new(synths_for_voices).write_to(output_file)
 end

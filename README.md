@@ -39,16 +39,22 @@ the song.
 
 ## Limitations
 
-Only a subset of the so-called `PSID` format is supported (a few `.sid` files use the `RSID` format
-which requires a more complete Commodore 64 environment to run), and maybe not all shortcomings of
-the support is handled well.
+The converter supports PSID versions 1–4 with one SID chip and PAL vertical-blank
+playback. It accepts both header-specified and embedded load addresses, retains
+the selected subtune, and captures SID register changes at their original frame.
+RSID files, CIA-timed PSID subtunes, and multi-SID files are rejected rather
+than exported with incorrect timing.
 
-Only PAL (50 frames per second) is supported. No CIA timers or other fanciness is supported.
+MIDI and Ruby are note-event formats, not SID audio emulators. Pulse-width
+modulation, filters, oscillator sync/ring modulation, samples, and exact ADSR
+curves cannot be represented one-to-one. The exported timeline is exact for
+the supported register-derived note, gate, waveform, and pitch events; the
+target synth determines the final sound.
 
-The conversion runs a specified number of frames (default is 1500 - this can be changed on the
+The conversion runs a specified number of frames (default is 15000 - this can be changed on the
 command line). Ideally it should be able to run until the song finishes.
 
-For these and other limitations, please consult [the issues](https://github.com/olefriis/sidtool/issues).
+For remaining limitations, please use this repository's issue tracker.
 
 ## Installation
 

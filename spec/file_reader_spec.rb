@@ -47,7 +47,7 @@ module Sidtool
     let(:name) { 'Imaginary game' }
     let(:author) { 'Imaginary author' }
     let(:released) { 'Copyright 2019' }
-    let(:data) { [1, 2, 3, 4] }
+    let(:data) { [0, 0x20, 1, 2, 3, 4] }
 
     context 'with unknown file format' do
       let(:format_string) { 'RSID' }
@@ -57,19 +57,11 @@ module Sidtool
       end
     end
 
-    context 'with version number less than 2' do
-      let(:version_number) { 1 }
-
-      it 'informs about valid version numbers' do
-        expect { FileReader.read(@path) }.to raise_exception('Invalid version number: 1. Only versions 2, 3, and 4 are supported.')
-      end
-    end
-
     context 'with version number greater than 4' do
       let(:version_number) { 5 }
 
       it 'informs about valid version numbers' do
-        expect { FileReader.read(@path) }.to raise_exception('Invalid version number: 5. Only versions 2, 3, and 4 are supported.')
+        expect { FileReader.read(@path) }.to raise_exception('Invalid version number: 5. Only versions 1, 2, 3, and 4 are supported.')
       end
     end
 
@@ -77,15 +69,17 @@ module Sidtool
       let(:data_offset) { 25 }
 
       it 'informs about valid data offset' do
-        expect { FileReader.read(@path) }.to raise_exception('Invalid data offset: 25. This has to be 124. The file may be corrupt.')
+        expect { FileReader.read(@path) }.to raise_exception('Invalid data offset: 25. It must be between 124 and the file size. The file may be corrupt.')
       end
     end
 
-    context 'with unsupported load address' do
+    context 'with a header load address' do
       let(:load_address) { 0x07E8 }
 
-      it 'informs about unsupported load addresses' do
-        expect { FileReader.read(@path) }.to raise_exception('Unsupported load address: 2024. Only 0 is supported for now.')
+      it 'uses the header address without consuming payload bytes' do
+        sid_file = FileReader.read(@path)
+        expect(sid_file.load_address).to eq(0x07E8)
+        expect(sid_file.data).to eq(data)
       end
     end
 
@@ -102,7 +96,7 @@ module Sidtool
       end
 
       it 'informs about too small file' do
-        expect { FileReader.read(@small_file_path) }.to raise_exception('File is too small - it should be at least 124 bytes. The file may be corrupt.')
+        expect { FileReader.read(@small_file_path) }.to raise_exception('File is too small - it should be at least 118 bytes. The file may be corrupt.')
       end
     end
 
@@ -119,6 +113,10 @@ module Sidtool
 
       it 'knows the init address' do
         expect(@sid_file.init_address).to eq(0x2003)
+      end
+
+      it 'uses the embedded load address' do
+        expect(@sid_file.load_address).to eq(0x2000)
       end
 
       it 'knows the play address' do
@@ -169,6 +167,23 @@ module Sidtool
       it 'rejects the incomplete SID payload' do
         expect { FileReader.read(@path) }
           .to raise_exception('SID data is missing the two-byte load address.')
+      end
+    end
+
+    context 'with an invalid subtune header' do
+      let(:songs) { 0 }
+
+      it 'rejects a zero song count' do
+        expect { FileReader.read(@path) }
+          .to raise_exception('PSID must contain at least one song.')
+      end
+    end
+
+    context 'with a legacy PSID v1 header' do
+      let(:version_number) { 1 }
+
+      it 'accepts the legacy version' do
+        expect(FileReader.read(@path).version).to eq(1)
       end
     end
 

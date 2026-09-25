@@ -7,6 +7,10 @@
   metadata fields.
 * Updated `mos6510` to 0.1.3, removing the obsolete V8 native dependency.
 * Added MIDI serialization and parser edge-case regression coverage.
+* Added a single conversion path with exact PAL frame timestamps, header load
+  address support, and correct PSID init/play-vector sequencing.
+* Reject CIA-timed, NTSC-only, and multi-SID inputs instead of producing
+  incorrectly timed output.
 
 ## 0.0.5
 * Bumped to mos6510 version 0.1.2 which depends on a version of mini_racer that supports
