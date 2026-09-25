@@ -2,6 +2,7 @@
 /vendor/bundle/
 /examples/minimal-tone.sid
 /examples/output/
+*.gem
 /.yardoc
 /_yardoc/
 /coverage/

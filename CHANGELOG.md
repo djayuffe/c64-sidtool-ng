@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.1 — 2026-09-25
 
 * Fixed MIDI output to write unsigned bytes and an accurate track count.
 * Reject incomplete SID payloads before conversion and correctly read empty
@@ -13,6 +13,11 @@
   output.
 * Added NTSC vertical-blank timing and frame-rate-aware Ruby/MIDI exports.
 * Added JSON SID register-trace export for lossless ordered single-SID events.
+
+## Upstream history
+
+The entries below predate this independent C64 SIDtool NG repository and are
+retained solely for source provenance.
 
 ## 0.0.5
 * Bumped to mos6510 version 0.1.2 which depends on a version of mini_racer that supports
@@ -32,5 +37,5 @@
 * Ensuring that existing synth gets properly cut off before starting the next sync for a voice.
   This fixes songs like `Commando.sid` that sounded just weird before.
 
-## 0.0.1
+## Initial upstream release
 Just getting started... A lot of mess...

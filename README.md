@@ -7,6 +7,13 @@ This independent repository preserves the upstream MIT licence and attribution.
 It is based on the `sidtool_ng` source from UbhaSecurity, itself derived from
 the original Sidtool by Ole Friis Østergaard.
 
+## Release v0.0.1
+
+The first independent C64 SIDtool NG release provides PSID v1–v4 parsing,
+PAL/NTSC vertical-blank timing, Ruby and MIDI export, and a frame-accurate JSON
+SID register trace. It includes a runnable minimal PSID example and a tested,
+local Bundler workflow.
+
 SID files contain Commodore 64 machine code. SIDtool NG runs the supported
 player code through a MOS 6510 emulator and records the SID register writes it
 produces. It is aimed at editing, analysis, and reuse—not waveform-accurate

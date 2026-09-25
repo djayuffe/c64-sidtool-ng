@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Ole Friis Østergaard']
   spec.email         = ['olefriis@gmail.com']
 
-  spec.summary       = 'Convert Commodore 64 SID tunes to Ruby and MIDI'
+  spec.summary       = 'Convert Commodore 64 PSID tunes to Ruby, MIDI, and SID register traces'
   spec.homepage      = 'https://github.com/djayuffe/c64-sidtool-ng'
   spec.license       = 'MIT'
   spec.metadata      = {
