@@ -1,5 +1,7 @@
 /.bundle/
 /vendor/bundle/
+/examples/minimal-tone.sid
+/examples/output/
 /.yardoc
 /_yardoc/
 /coverage/

@@ -1,41 +1,28 @@
 # C64 SIDtool NG
 
-Convert Commodore 64 SID music in the form of `.sid` files into editable Ruby
-or Standard MIDI File output.
+Convert Commodore 64 PSID music into editable Ruby, Standard MIDI File, or a
+frame-accurate JSON register trace.
 
 This independent repository preserves the upstream MIT licence and attribution.
 It is based on the `sidtool_ng` source from UbhaSecurity, itself derived from
 the original Sidtool by Ole Friis Østergaard.
 
-Basically, it's a massive hack made for fun and no profit. The vision, though, is to extract the
-actual information from `.sid` files, which are files storing music for the Commodore 64.
-
-`.sid` files contain actual Commodore 64 machine code that writes to registers corresponding to the
-Commodore 64 sound chip, the SID (Sound Interface Device). Which means that in order to play back a
-`.sid` file like it would sound on an actual Commodore 64, you will have to simulate both the
-processor and the sound chip.
-
-This project does not attempt to produce an authentic playback of the sounds - lots of those
-players already exist - but instead lets you export a Commodore 64 song into a format that lets
-you edit and experiment with the song. Want to change the instruments? Go ahead. Want to take out
-parts of the song and use in other projects? You can do that. Want to just listen to your favourite
-Commodore 64 song played back by a piano? Definitely do that!
+SID files contain Commodore 64 machine code. SIDtool NG runs the supported
+player code through a MOS 6510 emulator and records the SID register writes it
+produces. It is aimed at editing, analysis, and reuse—not waveform-accurate
+audio playback.
 
 ## Supported Output Formats
 
-### Ruby
+| Format | Best for | Fidelity |
+| --- | --- | --- |
+| `ruby` | Sonic Pi or custom Ruby post-processing | Note and timing events |
+| `midi` | DAW editing and general playback | Note and timing events |
+| `json` | Analysis, custom emulators, and conversion tools | Ordered SID register writes |
 
-You can get a simple Ruby file which defines a list of synths to play at certain points in time.
-This can be used to play back the music in [Sonic Pi](https://sonic-pi.net) (see below), or you
-can write a Ruby script to do your own post-processing.
-
-### Midi
-
-If you just want to listen to a `.sid` file, the easiest way is to export to midi file format and
-open the file in a player such as [VLC](https://www.videolan.org/vlc/index.html). However, if you
-want to further edit the result, import the file in a music editor such as GarageBand on a Mac.
-Then you can use all of the tools provided by your music editor to change instruments and rearrange
-the song. 
+The MIDI and Ruby exporters map SID waveforms to practical target instruments.
+The JSON exporter retains every captured register write, its frame number, and
+write order for the supported single-SID execution path.
 
 ## Limitations
 
@@ -56,9 +43,19 @@ command line). Ideally it should be able to run until the song finishes.
 
 For remaining limitations, please use this repository's issue tracker.
 
-## Installation
+## Quick start
 
-    bundle install
+```bash
+bundle install
+ruby examples/create_minimal_sid.rb
+mkdir -p examples/output
+bundle exec bin/sidtool --info examples/minimal-tone.sid
+bundle exec bin/sidtool --format json --out examples/output/minimal-tone.json --frames 4 examples/minimal-tone.sid
+```
+
+The final command produces a JSON trace beginning with the SID frequency and
+gate writes from the example's init routine. Generated example files are
+ignored by Git.
 
 ## Usage
 
@@ -67,20 +64,33 @@ at the [High Voltage SID Collection](https://www.hvsc.c64.org) homepage.
 
 Show information, like the author and number of songs in a file:
 
-    $ bundle exec bin/sidtool --info <input file>
+```bash
+bundle exec bin/sidtool --info path/to/tune.sid
+```
 
 Convert the default song from a `.sid` file to a midi file:
 
-    $ bundle exec bin/sidtool --out <output file> --format midi <input file>
+```bash
+bundle exec bin/sidtool --out tune.mid --format midi path/to/tune.sid
+```
 
 Convert the default song from a file to a Ruby list (`--format ruby` is the default):
 
-    $ bundle exec bin/sidtool --out <output file> <input file>
+```bash
+bundle exec bin/sidtool --out tune.rb path/to/tune.sid
+```
 
 Export an exact ordered trace of the SID register writes captured during the
 supported emulation path:
 
-    $ bundle exec bin/sidtool --out <output file> --format json <input file>
+```bash
+bundle exec bin/sidtool --out tune.json --format json --song 2 --frames 3000 path/to/tune.sid
+```
+
+`--song` is one-based and defaults to the tune's declared start song.
+`--frames` controls how many vertical-blank play calls are captured; it
+defaults to 15,000 frames. The JSON document contains `frame_rate`,
+`sid_events`, and the note-oriented `voices` projection.
 
 The Ruby output can then be used to play back the music, for example in Sonic Pi:
 
@@ -115,9 +125,13 @@ output file from `sidtool`.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to
-run the tests. You can also run `bin/console` for an interactive prompt that will allow you to
-experiment.
+After checking out the repo, run the following from the repository root:
+
+```bash
+bundle install
+bundle exec rake spec
+bundle exec bin/sidtool --help
+```
 
 The project uses `mos6510` 0.1.3 or later in the 0.1 line, which avoids the
 obsolete V8 native extension required by earlier releases.
