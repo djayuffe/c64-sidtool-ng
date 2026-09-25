@@ -62,6 +62,13 @@ module Sidtool
       end
     end
 
+    Tempo = Struct.new(:microseconds_per_quarter_note) do
+      def bytes
+        value = microseconds_per_quarter_note
+        [0xFF, 0x51, 0x03, (value >> 16) & 255, (value >> 8) & 255, value & 255]
+      end
+    end
+
     ProgramChange = Struct.new(:channel, :program_number) do
       def bytes
         raise "Channel too big: #{channel}" if channel > 15
@@ -97,8 +104,17 @@ module Sidtool
       end
     end
 
-    def initialize(synths_for_voices)
+    TICKS_PER_QUARTER_NOTE = 480
+
+    def initialize(synths_for_voices, frame_rate: FRAMES_PER_SECOND)
       @synths_for_voices = synths_for_voices
+      @frame_rate = frame_rate.to_f
+      raise ArgumentError, 'Frame rate must be positive' unless @frame_rate.positive?
+
+      @tempo_microseconds = (1_000_000 * TICKS_PER_QUARTER_NOTE / @frame_rate).round
+      unless @tempo_microseconds.between?(1, 0xFF_FF_FF)
+        raise ArgumentError, "Frame rate cannot be represented by MIDI tempo: #{@frame_rate}"
+      end
     end
 
     def write_to(path)
@@ -131,7 +147,7 @@ module Sidtool
           current_frame = start_frame
         end
 
-        end_frame = [current_frame, synth.start_frame + (FRAMES_PER_SECOND * (synth.attack + synth.decay + synth.sustain_length)).to_i].max
+        end_frame = [current_frame, synth.start_frame + (@frame_rate * (synth.attack + synth.decay + synth.sustain_length)).to_i].max
         track << DeltaTime.new(end_frame - current_frame)
         track << NoteOff.new(channel, current_tone)
         current_frame = end_frame
@@ -177,15 +193,15 @@ module Sidtool
       # Number of tracks. MIDI format 1 stores one track for each SID voice.
       write_uint16(file, @synths_for_voices.length)
 
-      # Division
-      # Default tempo is 120 BPM - 120 quarter-notes per minute. Which is 2 quarter-notes per second. If we then define
-      # 25 ticks per quarter-note, we end up with a timing of 50 ticks per second.
-      write_uint16(file, 25)
+      # One MIDI tick equals one source frame. The tempo event on every track
+      # maps those ticks to the PAL or NTSC frame rate.
+      write_uint16(file, TICKS_PER_QUARTER_NOTE)
     end
 
     def write_track(file, track, name)
       track_with_metadata = [
         DeltaTime[0], TrackName[name],
+        DeltaTime[0], Tempo[@tempo_microseconds],
         DeltaTime[0], TimeSignature[4, 2, 24, 8],
         DeltaTime[0], KeySignature[0, 0],
 

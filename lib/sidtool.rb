@@ -9,17 +9,19 @@ module Sidtool
   require 'sidtool/sid'
   require 'sidtool/state'
   require 'sidtool/converter'
+  require 'sidtool/json_file_writer'
 
-  # PAL properties
+  # Timing properties
   FRAMES_PER_SECOND = 50.0
-  CLOCK_FREQUENCY = 985248.0
+  PAL_CLOCK_FREQUENCY = 985_248.0
+  NTSC_CLOCK_FREQUENCY = 1_022_727.0
 
   STATE = State.new
 
-  # Convert a 16-bit SID frequency register value to PAL Hertz and MIDI note.
+  # Convert a 16-bit SID frequency register value to Hertz and MIDI note.
   # SID frequency is a phase increment, not a Hertz value.
   def self.sid_frequency_to_hz(value)
-    value * (CLOCK_FREQUENCY / 16_777_216.0)
+    value * (STATE.clock_frequency / 16_777_216.0)
   end
 
   def self.sid_frequency_to_midi(value)

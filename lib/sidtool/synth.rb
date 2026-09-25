@@ -25,7 +25,7 @@ module Sidtool
       return if released?
 
       @released_at = STATE.current_frame
-      length_of_ads = (STATE.current_frame - @start_frame) / FRAMES_PER_SECOND
+      length_of_ads = (STATE.current_frame - @start_frame) / STATE.frame_rate
       @attack, @decay, @sustain_length = adjust_ads(length_of_ads)
     end
 
@@ -35,7 +35,7 @@ module Sidtool
 
     def stop!
       if released?
-        @release = [@release, (STATE.current_frame - @released_at) / FRAMES_PER_SECOND].min
+        @release = [@release, (STATE.current_frame - @released_at) / STATE.frame_rate].min
       else
         @release = 0
         release!

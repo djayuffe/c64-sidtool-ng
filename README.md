@@ -39,7 +39,7 @@ the song.
 
 ## Limitations
 
-The converter supports PSID versions 1–4 with one SID chip and PAL vertical-blank
+The converter supports PSID versions 1–4 with one SID chip and PAL or NTSC vertical-blank
 playback. It accepts both header-specified and embedded load addresses, retains
 the selected subtune, and captures SID register changes at their original frame.
 RSID files, CIA-timed PSID subtunes, and multi-SID files are rejected rather
@@ -77,6 +77,11 @@ Convert the default song from a file to a Ruby list (`--format ruby` is the defa
 
     $ bundle exec bin/sidtool --out <output file> <input file>
 
+Export an exact ordered trace of the SID register writes captured during the
+supported emulation path:
+
+    $ bundle exec bin/sidtool --out <output file> --format json <input file>
+
 The Ruby output can then be used to play back the music, for example in Sonic Pi:
 
 ```ruby
@@ -87,7 +92,7 @@ previous_frame = 0
   current_frame = synth[0]
   frames_to_sleep = current_frame - previous_frame
   previous_frame = current_frame
-  sleep frames_to_sleep/50.0 if frames_to_sleep > 0
+  sleep frames_to_sleep/::FRAME_RATE if frames_to_sleep > 0
   
   in_thread do
     use_synth synth[2]
@@ -96,7 +101,7 @@ previous_frame = 0
     this_frame = current_frame
     controls = synth[7]
     controls.each do |c|
-      sleep (c[0] - this_frame) / 50.0
+      sleep (c[0] - this_frame) / ::FRAME_RATE
       this_frame = c[0]
       control played_synth, note: c[1]
     end

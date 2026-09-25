@@ -94,6 +94,10 @@ module Sidtool
       ((flags >> 2) & 0b11) == 0b10
     end
 
+    def frame_rate
+      ntsc_only? ? 60.0 : 50.0
+    end
+
     private
     def self.read_word(bytes)
       (bytes[0].ord << 8) + bytes[1].ord

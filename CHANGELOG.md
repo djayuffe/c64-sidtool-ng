@@ -9,8 +9,10 @@
 * Added MIDI serialization and parser edge-case regression coverage.
 * Added a single conversion path with exact PAL frame timestamps, header load
   address support, and correct PSID init/play-vector sequencing.
-* Reject CIA-timed, NTSC-only, and multi-SID inputs instead of producing
-  incorrectly timed output.
+* Reject CIA-timed and multi-SID inputs instead of producing incorrectly timed
+  output.
+* Added NTSC vertical-blank timing and frame-rate-aware Ruby/MIDI exports.
+* Added JSON SID register-trace export for lossless ordered single-SID events.
 
 ## 0.0.5
 * Bumped to mos6510 version 0.1.2 which depends on a version of mini_racer that supports

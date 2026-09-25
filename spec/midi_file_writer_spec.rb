@@ -101,6 +101,10 @@ module Sidtool
         expect { MidiFileWriter::DeltaTime[-1].bytes }
           .to raise_error(ArgumentError, 'MIDI delta time cannot be negative: -1')
       end
+
+      it 'encodes a standard MIDI tempo event' do
+        expect(MidiFileWriter::Tempo[9_600_000].bytes).to eq([0xFF, 0x51, 0x03, 0x92, 0x7C, 0x00])
+      end
     end
 
     describe '#write_to' do

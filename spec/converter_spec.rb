@@ -26,12 +26,18 @@ module Sidtool
         write_psid(file.path, init_address: 0x1000, play_address: play_address,
                    program: init + [0x60])
 
-        synths = Converter.new(FileReader.read(file.path), song: 1, frames: 1).convert
+        converter = Converter.new(FileReader.read(file.path), song: 1, frames: 1)
+        synths = converter.convert
         synth = synths.first.first
 
         expect(synth.start_frame).to eq(0)
         expect(synth.tone).to eq(Sidtool.sid_frequency_to_midi(0x1000))
         expect(synth.controls).to eq([])
+        expect(converter.sid_events.first(3)).to eq([
+          { frame: 0, register: 0, value: 0 },
+          { frame: 0, register: 1, value: 16 },
+          { frame: 0, register: 4, value: 17 }
+        ])
       end
     end
 
@@ -61,14 +67,15 @@ module Sidtool
       end
     end
 
-    it 'rejects NTSC-only songs instead of processing them at PAL speed' do
+    it 'uses NTSC timing for NTSC-only songs' do
       Tempfile.create(['sidtool', '.sid']) do |file|
         file.close
         write_psid(file.path, init_address: 0x1000, play_address: 0x1000,
                    program: [0x60], flags: 0b1000)
 
-        expect { Converter.new(FileReader.read(file.path), song: 1, frames: 1) }
-          .to raise_error(ArgumentError, 'NTSC-only PSID songs are not supported')
+        converter = Converter.new(FileReader.read(file.path), song: 1, frames: 1)
+        expect(converter.frame_rate).to eq(60.0)
+        expect(converter.convert).to all(be_empty)
       end
     end
   end

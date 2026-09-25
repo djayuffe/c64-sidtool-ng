@@ -6,6 +6,7 @@ module Sidtool
                   :internal_add, :sample_position, :sample_start, :sample_end,
                   :sample_repeat_start, :sample_repeats, :sample_period,
                   :sample_order, :sample_active
+    attr_reader :events
 
     def initialize
       # Initialize the internal attributes for pokeDigi
@@ -20,10 +21,12 @@ module Sidtool
       @pulse_low = @pulse_high = 0
       @control_register = 0
       @attack_decay = @sustain_release = 0
+      @events = []
     end
 
     # Existing poke method
     def poke(register, value)
+      @events << { frame: STATE.current_frame, register: register, value: value }
       if register >= 0 && register <= 6
         voice = @voices[0]
       elsif register >= 7 && register <= 13

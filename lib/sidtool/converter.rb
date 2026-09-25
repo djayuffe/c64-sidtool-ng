@@ -3,23 +3,24 @@ require 'mos6510'
 module Sidtool
   # Runs one supported PSID subtune and captures the SID register timeline.
   class Converter
-    attr_reader :sid_file, :song, :frames
+    attr_reader :sid_file, :song, :frames, :frame_rate, :sid_events
 
     def initialize(sid_file, song:, frames:)
       @sid_file = sid_file
       @song = song
       @frames = frames
+      @frame_rate = sid_file.frame_rate
+      @sid_events = []
 
       raise ArgumentError, 'Song must be at least 1' if song < 1
       raise ArgumentError, "File only has #{sid_file.songs} songs" if song > sid_file.songs
       raise ArgumentError, 'Frame count must not be negative' if frames.negative?
       raise ArgumentError, 'CIA-timed PSID songs are not supported' if sid_file.cia_timed?(song)
       raise ArgumentError, 'Multi-SID PSID songs are not supported' if sid_file.multi_sid?
-      raise ArgumentError, 'NTSC-only PSID songs are not supported' if sid_file.ntsc_only?
     end
 
     def convert
-      STATE.reset!
+      STATE.reset!(frame_rate: frame_rate)
       sid = Sid.new
       cpu = Mos6510::Cpu.new(sid: sid)
       cpu.load(sid_file.data, from: sid_file.load_address)
@@ -42,6 +43,7 @@ module Sidtool
       end
 
       sid.stop!
+      @sid_events = sid.events
       sid.synths_for_voices
     end
   end

@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 require 'sidtool'
-require 'mos6510'
 require 'optparse'
 
 DEFAULT_FRAMES_TO_PROCESS = 15000
 EXPORTERS = {
   'ruby' => Sidtool::RubyFileWriter,
-  'midi' => Sidtool::MidiFileWriter
+  'midi' => Sidtool::MidiFileWriter,
+  'json' => Sidtool::JsonFileWriter
 }
 
 params = {}
@@ -14,8 +14,8 @@ OptionParser.new do |parser|
   parser.banner = 'Usage: sidtool [options] <inputfile.sid>'
 
   parser.on('-i', '--info', 'Show file information')
-  parser.on('--format FORMAT', 'Output format, "ruby" (default) or "midi"')
-  parser.on('-o', '--out FILENAME', 'Output file (Ruby array)')
+  parser.on('--format FORMAT', 'Output format: "ruby" (default), "midi", or "json"')
+  parser.on('-o', '--out FILENAME', 'Output file')
   parser.on('-s', '--song NUMBER', Integer, 'Song number to process (defaults to the start song in the file)')
   parser.on('-f', '--frames NUMBER', Integer, "Number of frames to process (default #{DEFAULT_FRAMES_TO_PROCESS})")
   parser.on_tail('-h', '--help', 'Show this message') do
@@ -58,6 +58,12 @@ end
 if output_file
   STDERR.puts("Processed #{frames} frames")
 
-  synths_for_voices = Sidtool::Converter.new(sid_file, song: song, frames: frames).convert
-  exporter_class.new(synths_for_voices).write_to(output_file)
+  converter = Sidtool::Converter.new(sid_file, song: song, frames: frames)
+  synths_for_voices = converter.convert
+  if format == 'json'
+    exporter_class.new(synths_for_voices, frame_rate: converter.frame_rate,
+                       sid_events: converter.sid_events).write_to(output_file)
+  else
+    exporter_class.new(synths_for_voices, frame_rate: converter.frame_rate).write_to(output_file)
+  end
 end
